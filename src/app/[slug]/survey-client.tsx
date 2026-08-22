@@ -669,40 +669,94 @@ export function SurveyClient({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="flex flex-col items-center px-4 py-8 pb-16">
+      <main className="flex flex-col items-center px-4 py-10 pb-16">
         <div className="w-full max-w-xl">
 
           {/* Survey title */}
-          <h1 className="text-lg font-semibold text-gray-900 mb-1 leading-snug">
+          <h1 className="text-center text-3xl font-bold text-gray-900 mb-2 leading-tight">
             {snapshot.survey_title}
           </h1>
 
           {/* Description on first question */}
           {isFirst && snapshot.survey_description && (
-            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            <p className="text-center text-sm text-gray-500 mb-6 leading-relaxed">
               {snapshot.survey_description}
             </p>
           )}
 
-          {/* Progress */}
-          <div className="mb-6" aria-label={`Question ${currentIndex + 1} of ${questions.length}`}>
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-xs font-medium text-gray-500">
-                Question {currentIndex + 1} of {questions.length}
-              </span>
-              <span className="text-xs text-gray-400">{progressPct}%</span>
-            </div>
-            <div
-              className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden"
-              role="progressbar"
-              aria-valuenow={currentIndex + 1}
-              aria-valuemin={1}
-              aria-valuemax={questions.length}
-            >
+          {/* Spacing between title and nav card */}
+          <div className="mb-6" />
+
+          {/* Unified Navigation / Progress Card */}
+          <div
+            className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-6"
+            role="navigation"
+            aria-label="Survey navigation"
+          >
+            <div className="flex items-center gap-3">
+
+              {/* Previous */}
+              <button
+                onClick={handlePrev}
+                disabled={isFirst || isSubmitting}
+                className="flex items-center gap-1 text-sm font-medium text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity min-h-[44px] px-1 shrink-0"
+                aria-label="Previous question"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous
+              </button>
+
+              {/* Center: counter + progress bar + percentage */}
               <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                style={{ width: `${progressPct}%` }}
-              />
+                className="flex-1 text-center"
+                aria-label={`Question ${currentIndex + 1} of ${questions.length}, ${progressPct}% complete`}
+              >
+                <p className="text-xs font-medium text-gray-600 mb-1.5">
+                  Question {currentIndex + 1} of {questions.length}
+                </p>
+                <div
+                  className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={currentIndex + 1}
+                  aria-valuemin={1}
+                  aria-valuemax={questions.length}
+                >
+                  <div
+                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-600 mt-1.5">{progressPct}%</p>
+              </div>
+
+              {/* Next / Submit */}
+              {isLast ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-1 text-sm font-medium text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity min-h-[44px] px-1 shrink-0"
+                  aria-label="Submit survey"
+                >
+                  {isSubmitting ? "Submitting…" : "Submit"}
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-1 text-sm font-medium text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity min-h-[44px] px-1 shrink-0"
+                  aria-label="Next question"
+                >
+                  Next
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
@@ -777,37 +831,6 @@ export function SurveyClient({
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="mt-5 flex gap-3">
-            <button
-              onClick={handlePrev}
-              disabled={isFirst || isSubmitting}
-              className="flex-1 py-3 px-5 rounded-xl border-2 border-gray-200 text-gray-700 font-medium text-sm hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Previous question"
-            >
-              Previous
-            </button>
-
-            {isLast ? (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex-1 py-3 px-5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                aria-label="Submit survey"
-              >
-                {isSubmitting ? "Submitting…" : "Submit"}
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                disabled={isSubmitting}
-                className="flex-1 py-3 px-5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next question"
-              >
-                Next
-              </button>
-            )}
-          </div>
         </div>
       </main>
     </div>
