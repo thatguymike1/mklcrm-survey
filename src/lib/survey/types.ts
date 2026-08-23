@@ -24,6 +24,11 @@ export const SnapshotQuestionSchema = z.object({
 export const SurveySnapshotSchema = z.object({
   survey_title: z.string(),
   survey_description: z.string().nullable(),
+  // Optional for backward-compat: old snapshots without intro fields default to 'none'.
+  intro_media_type: z.enum(["none", "image", "video"]).optional().default("none"),
+  intro_image_path: z.string().nullable().optional().default(null),
+  intro_video_url: z.string().nullable().optional().default(null),
+  intro_video_aspect_ratio: z.enum(["16:9", "9:16", "1:1"]).optional().default("16:9"),
   questions: z.array(SnapshotQuestionSchema).min(1),
 });
 

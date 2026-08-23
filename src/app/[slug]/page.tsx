@@ -38,6 +38,7 @@ export default async function SurveyPage({ params }: Props) {
       snapshot={instance.snapshot}
       initialResponses={instance.responses}
       initialSubmitted={instance.submitted_at !== null}
+      initialBegan={instance.began}
     />
   );
 }

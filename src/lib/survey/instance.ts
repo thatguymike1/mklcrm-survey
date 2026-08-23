@@ -14,6 +14,7 @@ export interface LoadedSurveyInstance {
   opened_at: string | null;
   started_at: string | null;
   last_activity_at: string | null;
+  began: boolean;
   responses: LoadedResponse[];
 }
 
@@ -33,7 +34,8 @@ export async function getSurveyInstanceBySlug(
       opened_at,
       started_at,
       last_activity_at,
-      survey_responses(question_id, answer_text, answer_values)
+      survey_responses(question_id, answer_text, answer_values),
+      survey_events!survey_events_survey_instance_id_fkey(event_type)
     `,
     )
     .eq("slug", slug)
@@ -63,6 +65,10 @@ export async function getSurveyInstanceBySlug(
     }),
   );
 
+  const began = (instance.survey_events ?? []).some(
+    (e: { event_type: string }) => e.event_type === "began",
+  );
+
   return {
     id: instance.id,
     slug: instance.slug,
@@ -71,6 +77,7 @@ export async function getSurveyInstanceBySlug(
     opened_at: instance.opened_at,
     started_at: instance.started_at,
     last_activity_at: instance.last_activity_at,
+    began,
     responses,
   };
 }

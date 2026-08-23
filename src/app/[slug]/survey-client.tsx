@@ -65,6 +65,7 @@ interface Props {
   snapshot: SurveySnapshot;
   initialResponses: LoadedResponse[];
   initialSubmitted: boolean;
+  initialBegan: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -375,6 +376,7 @@ export function SurveyClient({
   snapshot,
   initialResponses,
   initialSubmitted,
+  initialBegan,
 }: Props) {
   const questions = snapshot.questions;
   const [answers, setAnswers] = useState<AnswerMap>(() =>
@@ -389,6 +391,9 @@ export function SurveyClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(initialSubmitted);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const hasIntro = snapshot.intro_media_type !== "none";
+  const [began, setBegan] = useState(initialBegan || !hasIntro);
+  const [isBeginning, setIsBeginning] = useState(false);
 
   const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const answersRef = useRef(answers);
@@ -631,6 +636,34 @@ export function SurveyClient({
     }
   }, [questions, currentIndex, flushCurrentQuestion, slug]);
 
+  // ── Begin handler ────────────────────────────────────────────────────────
+
+  const [beginError, setBeginError] = useState<string | null>(null);
+
+  const handleBegin = useCallback(async () => {
+    if (began || isBeginning) return;
+    setIsBeginning(true);
+    setBeginError(null);
+    try {
+      const res = await fetch("/api/began", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      if (!res.ok) {
+        setBeginError("Something went wrong. Please try again.");
+        setIsBeginning(false);
+        return;
+      }
+    } catch {
+      setBeginError("Network error. Please check your connection and try again.");
+      setIsBeginning(false);
+      return;
+    }
+    setBegan(true);
+    setIsBeginning(false);
+  }, [slug, began, isBeginning]);
+
   // ── Submitted state ───────────────────────────────────────────────────────
 
   if (isSubmitted) {
@@ -659,6 +692,99 @@ export function SurveyClient({
     );
   }
 
+  // ── Intro screen ─────────────────────────────────────────────────────────
+
+  if (!began) {
+    const ratio = snapshot.intro_video_aspect_ratio ?? "16:9";
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="flex flex-col items-center px-4 py-10 pb-16">
+          <div className="w-full max-w-xl">
+
+            <h1 className="text-center text-3xl font-bold text-gray-900 mb-8 leading-tight">
+              {snapshot.survey_title}
+            </h1>
+
+            {/* Intro media */}
+            {snapshot.intro_media_type === "image" && snapshot.intro_image_path && (
+              <div className="mb-8 flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getImageUrl(snapshot.intro_image_path)}
+                  alt={snapshot.survey_title}
+                  className="max-w-full h-auto max-h-[70vh] object-contain rounded-lg"
+                  loading="eager"
+                />
+              </div>
+            )}
+
+            {snapshot.intro_media_type === "video" && snapshot.intro_video_url && (
+              <div className="mb-8">
+                {ratio === "9:16" ? (
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-[260px] max-h-[70vh] aspect-[9/16] rounded-lg overflow-hidden bg-black">
+                      <iframe
+                        src={getBunnyEmbedUrl(snapshot.intro_video_url)}
+                        title={snapshot.survey_title}
+                        className="w-full h-full"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowFullScreen
+                        loading="eager"
+                      />
+                    </div>
+                  </div>
+                ) : ratio === "1:1" ? (
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-sm aspect-square rounded-lg overflow-hidden bg-black">
+                      <iframe
+                        src={getBunnyEmbedUrl(snapshot.intro_video_url)}
+                        title={snapshot.survey_title}
+                        className="w-full h-full"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowFullScreen
+                        loading="eager"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full aspect-video rounded-lg overflow-hidden bg-black">
+                    <iframe
+                      src={getBunnyEmbedUrl(snapshot.intro_video_url)}
+                      title={snapshot.survey_title}
+                      className="w-full h-full"
+                      allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      allowFullScreen
+                      loading="eager"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {beginError && (
+              <p className="mb-4 text-center text-sm text-red-600">{beginError}</p>
+            )}
+
+            <button
+              onClick={handleBegin}
+              disabled={isBeginning}
+              className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              aria-label="Begin survey"
+            >
+              {isBeginning ? "Loading…" : "Begin Survey"}
+              {!isBeginning && (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </button>
+
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // ── Survey UI ─────────────────────────────────────────────────────────────
 
   const question = questions[currentIndex];
@@ -676,13 +802,6 @@ export function SurveyClient({
           <h1 className="text-center text-3xl font-bold text-gray-900 mb-2 leading-tight">
             {snapshot.survey_title}
           </h1>
-
-          {/* Description on first question */}
-          {isFirst && snapshot.survey_description && (
-            <p className="text-center text-sm text-gray-500 mb-6 leading-relaxed">
-              {snapshot.survey_description}
-            </p>
-          )}
 
           {/* Spacing between title and nav card */}
           <div className="mb-6" />
