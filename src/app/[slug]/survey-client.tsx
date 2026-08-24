@@ -19,7 +19,7 @@ function MklHeader({ title }: { title: string }) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/assets/mkl-logo-banner-transp.png"
+            src="/assets/mkl-logo-banner-transparent.png"
             alt=""
             className="h-10 sm:h-14 w-auto block"
           />
