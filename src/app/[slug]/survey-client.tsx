@@ -4,6 +4,39 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SnapshotQuestion, SurveySnapshot, LoadedResponse } from "@/lib/survey/types";
 import { getImageUrl, isValidBunnyUrl, getBunnyEmbedUrl } from "@/lib/survey/media";
 
+// ─── MKL Header ───────────────────────────────────────────────────────────────
+
+function MklHeader({ title }: { title: string }) {
+  return (
+    <header className="w-full bg-[var(--mkl-dark)] shrink-0">
+      <div className="max-w-[680px] mx-auto px-4 sm:px-6 flex items-center gap-4 min-h-[52px] py-3">
+        <a
+          href="https://mikekinglive.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Visit Mike King Live website"
+          className="shrink-0 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 hover:opacity-85 transition-opacity"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/mkl-logo-banner-transp.png"
+            alt=""
+            className="h-10 sm:h-14 w-auto block"
+          />
+        </a>
+        {title && (
+          <>
+            <div className="w-px self-stretch shrink-0 bg-white/20" />
+            <span className="text-white/85 text-sm font-medium truncate leading-tight">
+              {title}
+            </span>
+          </>
+        )}
+      </div>
+    </header>
+  );
+}
+
 // ─── Image Lightbox ───────────────────────────────────────────────────────────
 
 function ImageLightbox({
@@ -219,7 +252,7 @@ function SingleSelect({
 }) {
   const sortedOptions = [...question.options].sort((a, b) => a.sort_order - b.sort_order);
   return (
-    <div className="space-y-3" role="radiogroup" aria-label={question.question_text}>
+    <div className="space-y-2.5" role="radiogroup" aria-label={question.question_text}>
       {sortedOptions.map((opt) => {
         const checked = value === opt.id;
         const inputId = `opt-${opt.id}`;
@@ -227,10 +260,10 @@ function SingleSelect({
           <label
             key={opt.id}
             htmlFor={inputId}
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-lg border cursor-pointer transition-all ${
               checked
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300 bg-white"
+                ? "border-[var(--mkl-blue)] bg-[var(--mkl-blue-tint)]"
+                : "border-[var(--mkl-border)] bg-white hover:border-[var(--mkl-blue)] hover:bg-[var(--mkl-blue-tint)]"
             }`}
           >
             <input
@@ -243,16 +276,16 @@ function SingleSelect({
               className="sr-only"
             />
             <span
-              className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                checked ? "border-blue-600" : "border-gray-300"
+              className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                checked ? "border-[var(--mkl-blue)]" : "border-[var(--mkl-border)]"
               }`}
               aria-hidden="true"
             >
               {checked && (
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--mkl-blue)]" />
               )}
             </span>
-            <span className="text-gray-800 text-base">{opt.option_text}</span>
+            <span className="text-sm font-medium text-[var(--mkl-text)]">{opt.option_text}</span>
           </label>
         );
       })}
@@ -278,7 +311,7 @@ function MultiSelect({
 }) {
   const sortedOptions = [...question.options].sort((a, b) => a.sort_order - b.sort_order);
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {sortedOptions.map((opt) => {
         const checked = values.includes(opt.id);
         const inputId = `opt-${opt.id}`;
@@ -286,10 +319,10 @@ function MultiSelect({
           <label
             key={opt.id}
             htmlFor={inputId}
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-lg border cursor-pointer transition-all ${
               checked
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300 bg-white"
+                ? "border-[var(--mkl-blue)] bg-[var(--mkl-blue-tint)]"
+                : "border-[var(--mkl-border)] bg-white hover:border-[var(--mkl-blue)] hover:bg-[var(--mkl-blue-tint)]"
             }`}
           >
             <input
@@ -300,10 +333,10 @@ function MultiSelect({
               className="sr-only"
             />
             <span
-              className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center ${
+              className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                 checked
-                  ? "border-blue-600 bg-blue-600"
-                  : "border-gray-300 bg-white"
+                  ? "border-[var(--mkl-blue)] bg-[var(--mkl-blue)]"
+                  : "border-[var(--mkl-border)] bg-white"
               }`}
               aria-hidden="true"
             >
@@ -323,7 +356,7 @@ function MultiSelect({
                 </svg>
               )}
             </span>
-            <span className="text-gray-800 text-base">{opt.option_text}</span>
+            <span className="text-sm font-medium text-[var(--mkl-text)]">{opt.option_text}</span>
           </label>
         );
       })}
@@ -359,7 +392,7 @@ function FreeText({
         aria-invalid={!!error}
         aria-describedby={error ? errorId : undefined}
         rows={5}
-        className="w-full rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none p-4 text-base text-gray-800 resize-none transition-colors bg-white"
+        className="w-full rounded-lg border border-[var(--mkl-border)] focus:border-[var(--mkl-blue)] focus:outline-none p-4 text-sm text-[var(--mkl-text)] resize-none transition-colors bg-white"
         placeholder="Type your answer here…"
       />
       {error && (
@@ -670,25 +703,28 @@ export function SurveyClient({
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-xl text-center py-16">
-          <svg
-            className="mx-auto mb-6 w-12 h-12 text-green-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-3">
-            Thank you.
-          </h1>
-          <p className="text-gray-500">Your responses have been recorded.</p>
+      <div className="min-h-screen flex flex-col bg-[var(--mkl-page-bg)]">
+        <MklHeader title={snapshot.survey_title} />
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="w-full max-w-md text-center py-16">
+            <svg
+              className="mx-auto mb-6 w-12 h-12 text-[var(--mkl-blue)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h1 className="text-2xl font-semibold text-[var(--mkl-text)] mb-3">
+              Thank you.
+            </h1>
+            <p className="text-[var(--mkl-muted)]">Your responses have been recorded.</p>
+          </div>
         </div>
       </div>
     );
@@ -699,13 +735,10 @@ export function SurveyClient({
   if (!began) {
     const ratio = snapshot.intro_video_aspect_ratio ?? "16:9";
     return (
-      <div className="min-h-screen bg-gray-50">
-        <main className="flex flex-col items-center px-4 py-10 pb-16">
+      <div className="min-h-screen flex flex-col bg-[var(--mkl-page-bg)]">
+        <MklHeader title={snapshot.survey_title} />
+        <main className="flex-1 flex flex-col items-center px-4 py-10 pb-16">
           <div className="w-full max-w-xl">
-
-            <h1 className="text-center text-3xl font-bold text-gray-900 mb-8 leading-tight">
-              {snapshot.survey_title}
-            </h1>
 
             {/* Intro media */}
             {snapshot.intro_media_type === "image" && snapshot.intro_image_path && (
@@ -770,7 +803,7 @@ export function SurveyClient({
             <button
               onClick={handleBegin}
               disabled={isBeginning}
-              className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-[var(--mkl-blue)] hover:bg-[var(--mkl-blue-hover)] text-white font-semibold text-base disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               aria-label="Begin survey"
             >
               {isBeginning ? "Loading…" : "Begin Survey"}
@@ -796,136 +829,130 @@ export function SurveyClient({
   const currentAnswer = answers[question.id];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="flex flex-col items-center px-4 py-10 pb-16">
-        <div className="w-full max-w-xl">
+    <div className="min-h-screen flex flex-col bg-[var(--mkl-page-bg)]">
+      <MklHeader title={snapshot.survey_title} />
+      <main className="flex-1 flex flex-col items-center px-4 pt-6 pb-16">
+        <div className="w-full max-w-[600px]">
 
-          {/* Survey title */}
-          <h1 className="text-center text-3xl font-bold text-gray-900 mb-2 leading-tight">
-            {snapshot.survey_title}
-          </h1>
-
-          {/* Spacing between title and nav card */}
-          <div className="mb-6" />
-
-          {/* Unified Navigation / Progress Card */}
+          {/* Navigation / Progress */}
           <div
-            className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-6"
+            className="flex items-center gap-3 mb-5"
             role="navigation"
             aria-label="Survey navigation"
           >
-            <div className="flex items-center gap-3">
+            {/* Previous */}
+            <button
+              onClick={handlePrev}
+              disabled={isFirst || isSubmitting}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--mkl-border)] bg-[var(--mkl-card-bg)] text-[var(--mkl-text)] text-sm font-medium transition-all min-h-[44px] shrink-0 disabled:opacity-30 disabled:cursor-not-allowed hover:border-[var(--mkl-muted)]"
+              aria-label="Previous question"
+            >
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">Previous</span>
+            </button>
 
-              {/* Previous */}
-              <button
-                onClick={handlePrev}
-                disabled={isFirst || isSubmitting}
-                className="flex items-center gap-1 text-sm font-medium text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity min-h-[44px] px-1 shrink-0"
-                aria-label="Previous question"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-                Previous
-              </button>
-
-              {/* Center: counter + progress bar + percentage */}
+            {/* Center: counter + progress bar + percentage */}
+            <div
+              className="flex-1 min-w-0 text-center"
+              aria-label={`Question ${currentIndex + 1} of ${questions.length}, ${progressPct}% complete`}
+            >
+              <p className="text-xs font-medium text-[var(--mkl-muted)] mb-1.5">
+                Question {currentIndex + 1} of {questions.length}
+              </p>
               <div
-                className="flex-1 text-center"
-                aria-label={`Question ${currentIndex + 1} of ${questions.length}, ${progressPct}% complete`}
+                className="h-[3px] w-full rounded-full overflow-hidden bg-[var(--mkl-border)]"
+                role="progressbar"
+                aria-valuenow={currentIndex + 1}
+                aria-valuemin={1}
+                aria-valuemax={questions.length}
               >
-                <p className="text-xs font-medium text-gray-600 mb-1.5">
-                  Question {currentIndex + 1} of {questions.length}
-                </p>
                 <div
-                  className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden"
-                  role="progressbar"
-                  aria-valuenow={currentIndex + 1}
-                  aria-valuemin={1}
-                  aria-valuemax={questions.length}
-                >
-                  <div
-                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                    style={{ width: `${progressPct}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-600 mt-1.5">{progressPct}%</p>
+                  className="h-full rounded-full bg-[var(--mkl-blue)] transition-all duration-300"
+                  style={{ width: `${progressPct}%` }}
+                />
               </div>
-
-              {/* Next / Submit */}
-              {isLast ? (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="flex items-center gap-1 text-sm font-medium text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity min-h-[44px] px-1 shrink-0"
-                  aria-label="Submit survey"
-                >
-                  {isSubmitting ? "Submitting…" : "Submit"}
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  onClick={handleNext}
-                  disabled={isSubmitting}
-                  className="flex items-center gap-1 text-sm font-medium text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity min-h-[44px] px-1 shrink-0"
-                  aria-label="Next question"
-                >
-                  Next
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )}
+              <p className="text-xs text-[var(--mkl-muted)] mt-1.5">{progressPct}%</p>
             </div>
+
+            {/* Next / Submit */}
+            {isLast ? (
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--mkl-blue)] hover:bg-[var(--mkl-blue-hover)] text-white text-sm font-semibold transition-all min-h-[44px] shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Submit survey"
+              >
+                {isSubmitting ? "Submitting…" : "Submit"}
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                disabled={isSubmitting}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--mkl-blue)] hover:bg-[var(--mkl-blue-hover)] text-white text-sm font-semibold transition-all min-h-[44px] shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Next question"
+              >
+                Next
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Question card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="rounded-xl border border-[var(--mkl-border)] bg-[var(--mkl-card-bg)] shadow-sm overflow-hidden">
+            {/* Blue accent top */}
+            <div className="h-[3px] bg-[var(--mkl-question)]" />
+            <div className="p-6">
 
-            {/* Media */}
-            <QuestionMedia question={question} />
+              {/* Media */}
+              <QuestionMedia question={question} />
 
-            {/* Question text */}
-            <p className="text-base font-medium text-gray-900 mb-5 leading-snug whitespace-pre-wrap">
-              {question.question_text}
-              {question.required && (
-                <span className="text-red-500 ml-1" aria-label="required">
-                  *
-                </span>
+              {/* Question text */}
+              <p className="text-base font-semibold text-[var(--mkl-question)] mb-5 leading-snug whitespace-pre-wrap">
+                {question.question_text}
+                {question.required && (
+                  <span className="text-red-500 ml-1" aria-label="required">
+                    *
+                  </span>
+                )}
+              </p>
+
+              {/* Answer controls */}
+              {question.answer_type === "single_select" && (
+                <SingleSelect
+                  question={question}
+                  value={currentAnswer?.values?.[0]}
+                  onChange={(optId) => handleSingleSelect(question.id, optId)}
+                  error={errors[question.id]}
+                />
               )}
-            </p>
 
-            {/* Answer controls */}
-            {question.answer_type === "single_select" && (
-              <SingleSelect
-                question={question}
-                value={currentAnswer?.values?.[0]}
-                onChange={(optId) => handleSingleSelect(question.id, optId)}
-                error={errors[question.id]}
-              />
-            )}
+              {question.answer_type === "multi_select" && (
+                <MultiSelect
+                  question={question}
+                  values={currentAnswer?.values ?? []}
+                  onChange={(optId, checked) =>
+                    handleMultiSelect(question.id, optId, checked)
+                  }
+                  error={errors[question.id]}
+                />
+              )}
 
-            {question.answer_type === "multi_select" && (
-              <MultiSelect
-                question={question}
-                values={currentAnswer?.values ?? []}
-                onChange={(optId, checked) =>
-                  handleMultiSelect(question.id, optId, checked)
-                }
-                error={errors[question.id]}
-              />
-            )}
-
-            {question.answer_type === "free_text" && (
-              <FreeText
-                question={question}
-                value={currentAnswer?.text ?? ""}
-                onChange={(text) => handleTextChange(question.id, text)}
-                error={errors[question.id]}
-              />
-            )}
+              {question.answer_type === "free_text" && (
+                <FreeText
+                  question={question}
+                  value={currentAnswer?.text ?? ""}
+                  onChange={(text) => handleTextChange(question.id, text)}
+                  error={errors[question.id]}
+                />
+              )}
+            </div>
           </div>
 
           {/* Save status */}
@@ -939,7 +966,7 @@ export function SurveyClient({
             </div>
           )}
           {isSaving && !saveError && (
-            <p className="mt-2 text-xs text-gray-400 text-right">Saving…</p>
+            <p className="mt-2 text-xs text-[var(--mkl-border)] text-right">Saving…</p>
           )}
 
           {/* Submit error */}

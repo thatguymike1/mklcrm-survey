@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Mike King Live Survey",
   description: "Personalized survey experience",
+  icons: {
+    icon: "/assets/mkl-favicon.png",
+  },
 };
 
 export default function RootLayout({
