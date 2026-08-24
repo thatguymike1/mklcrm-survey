@@ -217,9 +217,10 @@ function SingleSelect({
   onChange: (optionId: string) => void;
   error?: string;
 }) {
+  const sortedOptions = [...question.options].sort((a, b) => a.sort_order - b.sort_order);
   return (
     <div className="space-y-3" role="radiogroup" aria-label={question.question_text}>
-      {question.options.map((opt) => {
+      {sortedOptions.map((opt) => {
         const checked = value === opt.id;
         const inputId = `opt-${opt.id}`;
         return (
@@ -275,9 +276,10 @@ function MultiSelect({
   onChange: (optionId: string, checked: boolean) => void;
   error?: string;
 }) {
+  const sortedOptions = [...question.options].sort((a, b) => a.sort_order - b.sort_order);
   return (
     <div className="space-y-3">
-      {question.options.map((opt) => {
+      {sortedOptions.map((opt) => {
         const checked = values.includes(opt.id);
         const inputId = `opt-${opt.id}`;
         return (
@@ -886,7 +888,7 @@ export function SurveyClient({
             <QuestionMedia question={question} />
 
             {/* Question text */}
-            <p className="text-base font-medium text-gray-900 mb-5 leading-snug">
+            <p className="text-base font-medium text-gray-900 mb-5 leading-snug whitespace-pre-wrap">
               {question.question_text}
               {question.required && (
                 <span className="text-red-500 ml-1" aria-label="required">
