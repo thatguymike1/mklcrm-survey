@@ -1,12 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useId } from "react";
 import type { SnapshotQuestion, SurveySnapshot, LoadedResponse } from "@/lib/survey/types";
 import { getImageUrl, isValidBunnyUrl, getBunnyEmbedUrl } from "@/lib/survey/media";
 
 // ─── MKL Header ───────────────────────────────────────────────────────────────
 
-function MklHeader({ title }: { title: string }) {
+function trackClick(slug: string, event_type: "mkl_logo_clicked" | "booth_clicked" | "vip_clicked" | "intro_replayed") {
+  fetch("/api/event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug, event_type }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
+function MklHeader({ title, slug }: { title: string; slug: string }) {
   return (
     <header className="w-full bg-[var(--mkl-dark)] shrink-0">
       <div className="max-w-[680px] mx-auto px-4 sm:px-6 flex items-center gap-4 min-h-[52px] py-3">
@@ -15,6 +24,7 @@ function MklHeader({ title }: { title: string }) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Visit Mike King Live website"
+          onClick={() => trackClick(slug, "mkl_logo_clicked")}
           className="shrink-0 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70 hover:opacity-85 transition-opacity"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -80,6 +90,137 @@ function ImageLightbox({
         className="max-w-[95vw] max-h-[95vh] object-contain rounded"
         onClick={(e) => e.stopPropagation()}
       />
+    </div>
+  );
+}
+
+// ─── Intro Replay Modal ───────────────────────────────────────────────────────
+
+function IntroReplayModal({
+  videoUrl,
+  aspectRatio,
+  surveyTitle,
+  onClose,
+  triggerRef,
+}: {
+  videoUrl: string;
+  aspectRatio: string;
+  surveyTitle: string;
+  onClose: () => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  const dialogId = useId();
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Focus the close button on mount; return focus to trigger on unmount
+  useEffect(() => {
+    closeRef.current?.focus();
+    const trigger = triggerRef.current;
+    return () => {
+      trigger?.focus();
+    };
+  }, [triggerRef]);
+
+  // Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const ratio = aspectRatio ?? "16:9";
+
+  let videoBlock: React.ReactNode;
+  if (ratio === "9:16") {
+    videoBlock = (
+      <div className="flex justify-center w-full">
+        <div className="w-full max-w-[260px] aspect-[9/16] rounded-lg overflow-hidden bg-black">
+          <iframe
+            src={getBunnyEmbedUrl(videoUrl)}
+            title={surveyTitle}
+            className="w-full h-full"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    );
+  } else if (ratio === "1:1") {
+    videoBlock = (
+      <div className="flex justify-center w-full">
+        <div className="w-full max-w-sm aspect-square rounded-lg overflow-hidden bg-black">
+          <iframe
+            src={getBunnyEmbedUrl(videoUrl)}
+            title={surveyTitle}
+            className="w-full h-full"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    );
+  } else {
+    // 16:9 default
+    videoBlock = (
+      <div className="w-full aspect-video rounded-lg overflow-hidden bg-black">
+        <iframe
+          src={getBunnyEmbedUrl(videoUrl)}
+          title={surveyTitle}
+          className="w-full h-full"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+      aria-hidden="true"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${dialogId}-title`}
+        className="relative w-full max-w-xl bg-[var(--mkl-card-bg)] rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--mkl-border)]">
+          <span
+            id={`${dialogId}-title`}
+            className="text-sm font-semibold text-[var(--mkl-question)]"
+          >
+            Introduction
+          </span>
+          <button
+            ref={closeRef}
+            onClick={onClose}
+            aria-label="Close introduction video"
+            className="text-[var(--mkl-muted)] hover:text-[var(--mkl-text)] transition-colors rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--mkl-blue)] p-1"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Video */}
+        <div className="p-4">
+          {videoBlock}
+        </div>
+      </div>
     </div>
   );
 }
@@ -430,6 +571,23 @@ export function SurveyClient({
   const [began, setBegan] = useState(initialBegan || !hasIntro);
   const [isBeginning, setIsBeginning] = useState(false);
 
+  // Replay Introduction modal
+  const hasVideoIntro =
+    snapshot.intro_media_type === "video" &&
+    !!snapshot.intro_video_url &&
+    isValidBunnyUrl(snapshot.intro_video_url);
+  const [replayOpen, setReplayOpen] = useState(false);
+  const replayTriggerRef = useRef<HTMLButtonElement | null>(null);
+
+  const handleReplayOpen = useCallback(() => {
+    trackClick(slug, "intro_replayed");
+    setReplayOpen(true);
+  }, [slug]);
+
+  const handleReplayClose = useCallback(() => {
+    setReplayOpen(false);
+  }, []);
+
   const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const answersRef = useRef(answers);
   const inflightRef = useRef(0);
@@ -704,7 +862,7 @@ export function SurveyClient({
   if (isSubmitted) {
     return (
       <div className="min-h-screen flex flex-col bg-[var(--mkl-page-bg)]">
-        <MklHeader title={snapshot.survey_title} />
+        <MklHeader title={snapshot.survey_title} slug={slug} />
         <main className="flex-1 px-4 pt-12 pb-16">
           <div className="w-full max-w-xl mx-auto">
 
@@ -744,6 +902,7 @@ export function SurveyClient({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Booth Engagement — visit Mike King Live"
+                  onClick={() => trackClick(slug, "booth_clicked")}
                   className="w-full max-w-xs mx-auto sm:flex-1 sm:max-w-none sm:mx-0 rounded-xl overflow-hidden transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mkl-blue)]"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -758,6 +917,7 @@ export function SurveyClient({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="VIP Experiences — visit Mike King Live"
+                  onClick={() => trackClick(slug, "vip_clicked")}
                   className="w-full max-w-xs mx-auto sm:flex-1 sm:max-w-none sm:mx-0 rounded-xl overflow-hidden transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mkl-blue)]"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -782,7 +942,7 @@ export function SurveyClient({
     const ratio = snapshot.intro_video_aspect_ratio ?? "16:9";
     return (
       <div className="min-h-screen flex flex-col bg-[var(--mkl-page-bg)]">
-        <MklHeader title={snapshot.survey_title} />
+        <MklHeader title={snapshot.survey_title} slug={slug} />
         <main className="flex-1 flex flex-col items-center px-4 py-10 pb-16">
           <div className="w-full max-w-xl">
 
@@ -876,9 +1036,27 @@ export function SurveyClient({
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--mkl-page-bg)]">
-      <MklHeader title={snapshot.survey_title} />
+      <MklHeader title={snapshot.survey_title} slug={slug} />
       <main className="flex-1 flex flex-col items-center px-4 pt-6 pb-16">
         <div className="w-full max-w-[600px]">
+
+          {/* Replay Introduction — video intros only, while in question flow */}
+          {hasVideoIntro && (
+            <div className="mb-3">
+              <button
+                ref={replayTriggerRef}
+                onClick={handleReplayOpen}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--mkl-blue)] hover:text-[var(--mkl-blue-hover)] transition-colors rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mkl-blue)]"
+                aria-label="Replay survey introduction video"
+              >
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon fill="currentColor" stroke="none" points="10,8 16,12 10,16" />
+                </svg>
+                Replay Introduction
+              </button>
+            </div>
+          )}
 
           {/* Navigation / Progress */}
           <div
@@ -1027,6 +1205,17 @@ export function SurveyClient({
 
         </div>
       </main>
+
+      {/* Intro replay modal — rendered outside main so it overlays everything */}
+      {replayOpen && hasVideoIntro && (
+        <IntroReplayModal
+          videoUrl={snapshot.intro_video_url!}
+          aspectRatio={snapshot.intro_video_aspect_ratio ?? "16:9"}
+          surveyTitle={snapshot.survey_title}
+          onClose={handleReplayClose}
+          triggerRef={replayTriggerRef}
+        />
+      )}
     </div>
   );
 }
