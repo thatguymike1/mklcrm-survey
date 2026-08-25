@@ -885,6 +885,24 @@ export function SurveyClient({
                 Your survey is complete.
               </h1>
               <p className="text-[var(--mkl-muted)]">Your responses have been recorded.</p>
+
+              {/* Replay Introduction — video intros only, on completion page */}
+              {hasVideoIntro && (
+                <div className="mt-5">
+                  <button
+                    ref={replayTriggerRef}
+                    onClick={handleReplayOpen}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--mkl-blue)] hover:text-[var(--mkl-blue-hover)] transition-colors rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mkl-blue)]"
+                    aria-label="Replay survey introduction video"
+                  >
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <circle cx="12" cy="12" r="10" />
+                      <polygon fill="currentColor" stroke="none" points="10,8 16,12 10,16" />
+                    </svg>
+                    Replay Introduction
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -932,6 +950,16 @@ export function SurveyClient({
 
           </div>
         </main>
+
+        {replayOpen && hasVideoIntro && (
+          <IntroReplayModal
+            videoUrl={snapshot.intro_video_url!}
+            aspectRatio={snapshot.intro_video_aspect_ratio ?? "16:9"}
+            surveyTitle={snapshot.survey_title}
+            onClose={handleReplayClose}
+            triggerRef={replayTriggerRef}
+          />
+        )}
       </div>
     );
   }
